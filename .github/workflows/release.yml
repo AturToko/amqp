@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  pull_request:
+    branches: [ master ]
+    types: [ closed ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy, ex:latest'
+        required: true
+
+concurrency:
+  group: release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: (github.event_name == 'pull_request' && github.event.action == 'closed')
+    runs-on: ubuntu-20.04
+    steps:
+      - id: bump
+        if: github.event.pull_request.merged
+        uses: zwaldowski/match-label-action@v2
+        with:
+          allowed: major,minor,patch,prerelease
+      - uses: actions/checkout@v2
+      - id: next_version
+        uses: zwaldowski/semver-release-action@v2
+        with:
+          dry_run: true
+          preid: rc
+          bump: ${{ steps.bump.outputs.match }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save version tag to file
+        env:
+          NEXT_VERSION_TAG: ${{ steps.next_version.outputs.version }}
+        run: |
+          echo "$NEXT_VERSION_TAG" > next_version_release.txt
+      - name: Upload next version tag
+        uses: actions/upload-artifact@v2
+        with:
+          name: next_version
+          path: next_version_release.txt
+
+  tagging:
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download params from job build
+        uses: actions/download-artifact@v2
+        with:
+          name: next_version
+      - name: Read params from file
+        id: version
+        run: |
+          tag=`cat next_version_release.txt`
+          echo ::set-output name=version_tag::$tag
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version_tag }}
+          release_name: Release ${{ steps.version.outputs.version_tag }}
+          body: |
+            Release
+          draft: false
+          prerelease: false
+      - uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 10
+          delete_tags: true
+          delete_tag_pattern: rc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cleaning:
+    runs-on: ubuntu-20.04
+    needs: tagging
+    steps:
+      - name: Remove old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '1 month'
+          skip-recent: 30
