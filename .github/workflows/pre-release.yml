@@ -44,7 +44,7 @@ jobs:
           path: next_version_pre_release.txt
 
   tagging:
-    permissions: read-all|write-all
+    permissions: write-all
     runs-on: ubuntu-20.04
     needs: build
     steps:
