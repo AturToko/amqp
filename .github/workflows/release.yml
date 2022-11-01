@@ -14,9 +14,6 @@ concurrency:
   group: release
   cancel-in-progress: true
 
-permissions:
-  contents: write
-
 jobs:
   build:
     if: (github.event_name == 'pull_request' && github.event.action == 'closed')
@@ -62,11 +59,10 @@ jobs:
           echo ::set-output name=version_tag::$tag
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v0.1.14
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1.11.1
         with:
-          tag_name: ${{ steps.version.outputs.version_tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.version.outputs.version_tag }}
           name: Release ${{ steps.version.outputs.version_tag }}
           body: |
             Release
