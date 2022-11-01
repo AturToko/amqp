@@ -1,5 +1,5 @@
 {
-    "name": "aturtoko/amqp",
+    "name": "idham101/amqp",
     "description": "php-amqplib wrapper that eases the consumption of RabbitMQ. A painless way of using RabbitMQ",
     "type": "library",
     "license": "MIT",
