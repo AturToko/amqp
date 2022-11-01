@@ -61,12 +61,12 @@ jobs:
           echo ::set-output name=version_tag::$tag
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.version.outputs.version_tag }}
-          release_name: Release ${{ steps.version.outputs.version_tag }}
+          name: Release ${{ steps.version.outputs.version_tag }}
           body: |
             Release
           draft: false
