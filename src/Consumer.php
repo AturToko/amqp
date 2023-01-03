@@ -183,7 +183,7 @@ class Consumer extends Connection
 
         $allowedMethods = $options['consume']['allowed_methods'] ?? null;
         $nonBlocking = $options['consume']['non_blocking'] ?? false;
-        $timeout = $options['consume']['timeout'] ?? 0;
+        $timeout = $options['consume']['timeout'] ?? 60;
         while ($this->getChannel()->is_consuming()) {
             $this->getChannel()->wait($allowedMethods, $nonBlocking, $timeout);
         }
